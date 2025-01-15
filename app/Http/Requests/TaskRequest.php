@@ -26,6 +26,7 @@ class TaskRequest extends FormRequest
         return [
             'agent' => 'string',
             'date' => 'string',
+            'dead_name' => 'string',
             'message' => 'string',
             'photo' => 'string|nullable'
         ];

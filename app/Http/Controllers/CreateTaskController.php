@@ -20,22 +20,21 @@ class CreateTaskController extends Controller
     {
         $data = $request->validated();
         $message = $data['message'];
-        $string = str_replace('\\n', "\n", $message);
-        $lines = explode("\n", $string);
-        $fioArr = explode('</b>', $lines[1]);
-        $description = "";
-        foreach ($lines as $line)
-        {
-            $description.=$line.PHP_EOL;
-        }
+//        $string = str_replace('\\n', "\n", $message);
+//        $lines = explode("\n", $string);
+//        $fioArr = explode('</b>', $lines[1]);
+//        $description = "";
+//        foreach ($lines as $line)
+//        {
+//            $description.=$line."&nbsp;";
+//        }
 
-        $fio = trim($fioArr[1]);
+        $fio = $data['dead_name'];
         $date = date('d.m.y H:i:s');
         $boardName = sprintf('%s | %s', $date, $fio);
         $token = $this->getToken();
 
         $projectId = config('yoogile.project_id');
-        $boardId = null;
         $columnId = null;
         $taskId = null;
 
@@ -51,7 +50,7 @@ class CreateTaskController extends Controller
 
             if($columnId)
             {
-                $taskId = $this->yoogileApi->createTask($columnId, $fio, $description, $token);
+                $taskId = $this->yoogileApi->createTask($columnId, $fio, $message, $token);
             }
         }
 
