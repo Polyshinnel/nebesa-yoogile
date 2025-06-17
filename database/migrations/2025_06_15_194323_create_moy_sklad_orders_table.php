@@ -15,6 +15,9 @@ class CreateMoySkladOrdersTable extends Migration
     {
         Schema::create('moy_sklad_orders', function (Blueprint $table) {
             $table->id();
+            $table->string('order_id');
+            $table->string('order_name');
+            $table->string('order_link');
             $table->timestamps();
         });
     }

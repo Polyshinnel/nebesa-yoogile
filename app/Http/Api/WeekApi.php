@@ -108,4 +108,27 @@ class WeekApi
 
         return $this->requestTool->requestTool('POST', $url, json_encode($data), $headers);
     }
+
+    public function getUsers(): array
+    {
+        $headers = [
+            'Content-Type: application/json',
+            "Authorization: Bearer {$this->token}"
+        ];
+        $url = 'https://api.weeek.net/public/v1/ws/members';
+        return $this->requestTool->requestTool('GET', $url, null, $headers);
+    }
+
+    public function addAssigners($userList, $taskId): array
+    {
+        $headers = [
+            'Content-Type: application/json',
+            "Authorization: Bearer {$this->token}"
+        ];
+        $url = sprintf('https://api.weeek.net/public/v1/tm/tasks/%s/assignees', $taskId);
+        $data = [
+            'assignees' => $userList
+        ];
+        return $this->requestTool->requestTool('POST', $url, json_encode($data), $headers);
+    }
 }
