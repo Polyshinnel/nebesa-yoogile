@@ -33,7 +33,7 @@ class MoySkladApi
         return false;
     }
 
-    public function getOrders(int $limit = 10, int $offset = 0, string $sortColumn = 'updated', string $sortDirection = 'desc'): array | string
+    public function getOrders(int $limit = 10, int $offset = 0, string $sortColumn = 'created', string $sortDirection = 'desc'): array | string
     {
         $url = 'https://api.moysklad.ru/api/remap/1.2/entity/customerorder';
         $params = [
