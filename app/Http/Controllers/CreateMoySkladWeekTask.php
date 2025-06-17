@@ -32,7 +32,6 @@ class CreateMoySkladWeekTask extends Controller
         {
             foreach ($orders as $order)
             {
-                $this->createOrderToDb($order);
                 $project = $this->weekApi->createProject($order['custom_order_name'], 'Заказ из МойСклад');
                 if(!$project['response']) {
                     return "Ошибка создания проекта!";
@@ -117,8 +116,6 @@ class CreateMoySkladWeekTask extends Controller
                     $taskId = $taskJson['task']['id'];
                     $this->weekApi->addAssigners($userList, $taskId);
                 }
-
-
 
                 $this->createOrderToDb($order);
             }
