@@ -21,14 +21,12 @@ class CreateMoySkladWeekTask extends Controller
 
     public function precessingTasks(): string
     {
-        $users = $this->weekApi->getUsers();
         $userList = [
             '9edad07c-7dfb-4b01-8b02-eb5e85eba39c',
             '9f10ce14-04e3-46d9-bf2c-6cf26c190110',
             '9f14ea94-d05e-439e-b0ba-eb166bf71539'
         ];
         $orders = $this->getMoySkladNewOrders();
-
 
         if($orders)
         {
@@ -57,13 +55,71 @@ class CreateMoySkladWeekTask extends Controller
 
                 $boardColsJson = json_decode($boardCols['response'], true);
                 $columnId = $boardColsJson['boardColumns'][0]['id'];
-                $task = $this->weekApi->createTask($order['order_name'], $order['href'], $projectId, $columnId);
-                if(!$task['response']) {
-                    return 'Ошибка создания задачи!';
+
+                $taskArr = [
+                    [
+                        'name' => $order['order_name'],
+                        'description' => $order['href']
+                    ]
+                ];
+
+                if($order['project_name'] == 'КРЕМАЦИЯ' || $order['project_name'] == 'ПОХОРОНЫ')
+                {
+                    $taskArr[] = [
+                        'name' => 'Оформление документов',
+                        'description' => ''
+                    ];
+                    $taskArr[] = [
+                        'name' => 'Предпохоронная подготовка',
+                        'description' => ''
+                    ];
+                    $taskArr[] = [
+                        'name' => 'Подготовка траурного зала',
+                        'description' => ''
+                    ];
+                    $taskArr[] = [
+                        'name' => 'Подготовка фото',
+                        'description' => ''
+                    ];
+                    $taskArr[] = [
+                        'name' => 'Табличка',
+                        'description' => ''
+                    ];
+                    $taskArr[] = [
+                        'name' => 'Комплекташка',
+                        'description' => ''
+                    ];
+                    $taskArr[] = [
+                        'name' => 'Ленты',
+                        'description' => ''
+                    ];
+                    $taskArr[] = [
+                        'name' => 'Наряд землекопу',
+                        'description' => ''
+                    ];
+
+                    if($order['project_name'] == 'КРЕМАЦИЯ')
+                    {
+                        $taskArr[] = [
+                            'name' => 'Бронь в крематории',
+                            'description' => ''
+                        ];
+                    }
                 }
-                $taskJson = json_decode($task['response'], true);
-                $taskId = $taskJson['task']['id'];
-                $this->weekApi->addAssigners($userList, $taskId);
+
+                foreach ($taskArr as $task)
+                {
+                    $task = $this->weekApi->createTask($task['name'], $task['description'], $projectId, $columnId);
+                    if(!$task['response']) {
+                        return 'Ошибка создания задачи!';
+                    }
+                    $taskJson = json_decode($task['response'], true);
+                    $taskId = $taskJson['task']['id'];
+                    $this->weekApi->addAssigners($userList, $taskId);
+                }
+
+
+
                 $this->createOrderToDb($order);
             }
             $customers = $this->getMoyskladNewCustomers($orders);
@@ -81,10 +137,11 @@ class CreateMoySkladWeekTask extends Controller
 
     private function getMoySkladNewOrders()
     {
-        $orders = $this->moySkladApi->getOrders();
+        $orders = $this->moySkladApi->getOrders(5);
         $orders = json_decode($orders, true);
         $orders = $orders['rows'];
         $orderList = [];
+        $token = $this->moySkladApi->getToken();
         foreach ($orders as $order) {
             $id = $order['id'];
             //Проверяем есть ли такой заказ
@@ -93,6 +150,31 @@ class CreateMoySkladWeekTask extends Controller
                 $deadName = null;
                 $fullDeadName = null;
                 $attributes = $order['attributes'];
+                $projectName = 'N.A';
+                if(isset($order['project']['meta']['href']))
+                {
+                    $projectUrl = $order['project']['meta']['href'];
+                    $projectInfo = $this->moySkladApi->getSomeData($token, $projectUrl);
+                    $projectInfo = json_decode($projectInfo, true);
+                    $projectName = $projectInfo['name'];
+                }
+
+
+
+//                $positionsUrl = $order['positions']['meta']['href'];
+//                $positionsInfo = $this->moySkladApi->getSomeData($token, $positionsUrl);
+//                $positionsInfo = json_decode($positionsInfo, true);
+
+                $positions = [];
+
+//                foreach ($positionsInfo['rows'] as $position) {
+//                    $positionLink = $position['assortment']['meta']['href'];
+//                    $positionData = $this->moySkladApi->getSomeData($token, $positionLink);
+//                    $positionData = json_decode($positionData, true);
+//                    $positions[] = $positionData['name'];
+//                }
+
+
                 foreach ($attributes as $attr) {
                     if ($attr['name'] == 'Умерший') {
                         $fullDeadName = $attr['value'];
@@ -108,7 +190,10 @@ class CreateMoySkladWeekTask extends Controller
                     'order_name' => $order['name'],
                     'custom_order_name' => sprintf('%s ум. %s', $order['name'], $deadName),
                     'full_dead_name' => $fullDeadName,
+                    'project_name' => $projectName,
+                    'positions' => $positions,
                 ];
+
             }
         }
 

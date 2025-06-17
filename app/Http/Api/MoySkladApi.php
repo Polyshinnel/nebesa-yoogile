@@ -17,7 +17,7 @@ class MoySkladApi
         $this->tool = $tool;
     }
 
-    private function getToken(): string | false
+    public function getToken(): string | false
     {
         $url = 'https://api.moysklad.ru/api/remap/1.2/security/token';
         $headers = [
@@ -107,4 +107,32 @@ class MoySkladApi
             'error' => 'Ошибка получения токена'
         ];
     }
+
+    public function getSomeData($token, $dataUrl): array | string
+    {
+        $headers = [
+            'Accept-Encoding: gzip',
+            'Authorization: Bearer ' . $token
+        ];
+
+        $data = $this->tool->requestTool('GET', $dataUrl, null, $headers);
+        if ($data['response']){
+            // Распаковываем gzip-сжатые данные
+            $decoded = gzdecode($data['response']);
+            if ($decoded === false) {
+                return [
+                    'message' => 'something went wrong',
+                    'error' => 'Ошибка распаковки gzip данных'
+                ];
+            }
+            return $decoded;
+        } else {
+            return [
+                'message' => 'something went wrong',
+                'error' => 'Ошибка получения контакта'
+            ];
+        }
+
+    }
+
 }
